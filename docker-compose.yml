@@ -1,0 +1,42 @@
+version: "3.3"
+services:
+  db1:
+    container_name: postgis-workspace-postgres
+    restart: always
+    image: postgis/postgis
+    volumes:
+      - database-volume/:/var/lib/postgresql/data/
+      - ./db_init/:/docker-entrypoint-initdb.d/
+    env_file:
+      - ${PWD}/.env
+    networks:
+      - network
+    ports:
+      - 11000:5432
+  postgrest:
+    container_name: postgis-workspace-postgREST
+    restart: always
+    image: postgrest/postgrest
+    env_file:
+      - ${PWD}/.env
+    environment:
+      - PGRST_DB_URI=postgres://${PGRST_DB_USER}:${PGRST_DB_PASSWORD}@db1:5432/${DATABASE}
+      - PGRST_DB_SCHEMA=${PGREST_DB_SCHEMA}
+      - PGRST_DB_ANON_ROLE=postgres
+      - PGRST_DB_POOL=${DB_POOL}
+      - PGRST_JWT_SECRET=${JWT_SECRET}
+      - PGRST_MAX_ROWS=${MAX_ROWS}
+      - PGRST_PRE_REQUEST=${PRE_REQUEST}
+      - PGRST_SERVER_PROXY_URI=${SERVER_PROXY_URI}
+    depends_on:
+      - db1
+    networks:
+      - network
+    ports:
+      - 11002:3000
+networks:
+  network:
+
+volumes:
+  database-volume:
+
